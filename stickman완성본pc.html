@@ -1,0 +1,3199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Stickman Clash 2P</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+overflow-x:hidden;
+width:100%;
+}
+
+body{
+margin:0;
+background:#070b14;
+color:white;
+font-family:Arial,sans-serif;
+}
+
+.screen{
+min-height:100vh;
+padding:12px;
+}
+
+.hidden{display:none!important}
+
+.wrap{
+max-width:1150px;
+margin:auto;
+}
+
+h1{
+text-align:center;
+font-size:26px;
+margin:2px 0;
+}
+
+.sub{
+text-align:center;
+color:#94a3b8;
+margin-bottom:8px;
+font-size:12px;
+}
+
+.mode-toggle{
+display:flex;
+justify-content:center;
+gap:8px;
+margin-bottom:10px;
+}
+
+.mode-btn{
+background:#1b2942;
+border:2px solid #334155;
+color:#cbd5e1;
+padding:7px 16px;
+border-radius:10px;
+font-size:13px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.mode-btn:hover{
+border-color:#475569;
+}
+
+.mode-btn.active{
+background:#22c55e;
+border-color:#22c55e;
+color:#031308;
+}
+
+.coin{
+position:absolute;
+right:15px;
+top:10px;
+background:#182338;
+border:2px solid #facc15;
+padding:5px 10px;
+border-radius:10px;
+font-size:13px;
+font-weight:bold;
+}
+
+.players{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+}
+
+.panel{
+background:#111827;
+border:2px solid #26334d;
+border-radius:14px;
+padding:8px 10px;
+}
+
+.p1{border-color:#168bd4}
+.p2{border-color:#e33d5d}
+
+h2{margin:0 0 4px;font-size:16px}
+h3{margin:6px 0 4px;font-size:13px}
+
+.selector{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.arrow{
+width:34px;
+height:34px;
+border:0;
+border-radius:10px;
+background:#263957;
+color:white;
+font-size:19px;
+font-weight:bold;
+cursor:pointer;
+flex-shrink:0;
+}
+
+.arrow:hover{
+background:#385174;
+}
+
+.preview{
+flex:1;
+background:#0b1220;
+border:3px solid #263957;
+border-radius:15px;
+padding:8px;
+text-align:center;
+min-width:0;
+display:flex;
+flex-direction:column;
+}
+
+.preview img{
+width:100%;
+height:78px;
+object-fit:contain;
+border-radius:10px;
+}
+
+.preview.map img{
+height:70px;
+object-fit:cover;
+}
+
+.preview-name{
+font-size:14px;
+font-weight:bold;
+margin-top:2px;
+}
+
+/* 잠김/구매 여부와 상관없이 항상 같은 높이를 차지하는 하단 상태 영역 */
+.preview-status{
+margin-top:2px;
+min-height:36px;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:2px;
+}
+
+.preview-price{
+font-size:11px;
+color:#facc15;
+}
+
+.locked-preview{
+filter:grayscale(.7);
+opacity:.75;
+}
+
+.buy-btn{
+border:0;
+border-radius:7px;
+padding:4px 10px;
+background:#facc15;
+color:#241900;
+font-weight:bold;
+font-size:12px;
+cursor:pointer;
+}
+
+.buy-btn:hover{
+background:#fde047;
+}
+
+.unlocked-text{
+color:#22c55e;
+font-size:12px;
+font-weight:bold;
+}
+
+/* 무기 */
+
+.weapon-box{
+position:relative;
+}
+
+.weapon-current{
+width:100%;
+height:62px;
+background:#0b1220;
+border:3px solid #263957;
+border-radius:13px;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+position:relative;
+}
+
+.weapon-current:hover{
+border-color:#22c55e;
+}
+
+.weapon-current img{
+width:120px;
+height:46px;
+object-fit:contain;
+}
+
+.weapon-current-name{
+position:absolute;
+bottom:2px;
+left:0;
+right:0;
+text-align:center;
+font-weight:bold;
+font-size:12px;
+background:#050812cc;
+padding:2px;
+}
+
+.weapon-popup{
+position:absolute;
+z-index:50;
+left:50%;
+top:68px;
+transform:translateX(-50%);
+width:520px;
+max-width:90vw;
+background:#111827;
+border:3px solid #475569;
+border-radius:15px;
+padding:10px;
+box-shadow:0 15px 40px #000b;
+}
+
+.weapon-popup-title{
+font-weight:bold;
+font-size:17px;
+margin-bottom:8px;
+text-align:center;
+}
+
+.weapon-list{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:6px;
+}
+
+.weapon-option{
+position:relative;
+background:#1b2942;
+border:2px solid transparent;
+border-radius:10px;
+padding:5px;
+cursor:pointer;
+text-align:center;
+}
+
+.weapon-option:hover{
+background:#263957;
+}
+
+.weapon-option.selected{
+border-color:#22c55e;
+}
+
+.weapon-option.locked{
+opacity:.65;
+filter:grayscale(.7);
+}
+
+.weapon-option img{
+width:100%;
+height:40px;
+object-fit:contain;
+}
+
+.weapon-option-name{
+font-size:11px;
+font-weight:bold;
+}
+
+.weapon-option-price{
+font-size:10px;
+color:#facc15;
+}
+
+.weapon-close{
+width:100%;
+margin-top:8px;
+padding:7px;
+border:0;
+border-radius:8px;
+background:#334155;
+color:white;
+cursor:pointer;
+}
+
+/* 시작 */
+
+.start{
+display:block;
+margin:10px auto 6px;
+border:0;
+border-radius:12px;
+background:#22c55e;
+color:#031308;
+font-size:17px;
+font-weight:900;
+padding:9px 32px;
+cursor:pointer;
+}
+
+.controls{
+text-align:center;
+color:#aab7ce;
+font-size:11px;
+}
+
+.score{
+text-align:center;
+font-size:22px;
+font-weight:bold;
+margin:10px;
+}
+
+.hud{
+display:flex;
+justify-content:space-between;
+align-items:center;
+font-weight:bold;
+font-size:19px;
+}
+
+.back{
+background:#334155;
+color:white;
+border:0;
+border-radius:9px;
+padding:9px 14px;
+cursor:pointer;
+}
+
+canvas{
+width:100%;
+margin-top:10px;
+border:3px solid #334155;
+border-radius:18px;
+background:#111;
+display:block;
+}
+
+#message{
+text-align:center;
+font-size:25px;
+font-weight:900;
+margin:10px;
+}
+
+.price-big{
+color:#facc15;
+font-weight:bold;
+}
+
+@media(max-width:800px){
+
+.players{
+grid-template-columns:1fr;
+}
+
+h1{
+font-size:32px;
+}
+
+.coin{
+position:static;
+width:max-content;
+margin:0 auto 10px;
+}
+
+.weapon-popup{
+width:270px;
+top:68px;
+}
+
+.weapon-list{
+grid-template-columns:repeat(2,1fr);
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<!-- =====================================================
+선택 화면
+===================================================== -->
+
+<div id="selectScreen" class="screen">
+
+<div class="coin">
+🪙 <span id="coinText">0</span> COIN
+</div>
+
+<div class="wrap">
+
+<h1>⚔️ STICKMAN CLASH</h1>
+
+<div class="sub">
+LOCAL 2 PLAYER · BEST OF 3
+</div>
+
+<div class="mode-toggle">
+<button id="mode1v1" class="mode-btn active" onclick="setMode(false)">⚔️ 1 vs 1</button>
+<button id="modeAI" class="mode-btn" onclick="setMode(true)">🤖 1 vs AI</button>
+</div>
+
+<div class="players">
+
+<!-- P1 -->
+
+<div class="panel p1">
+
+<h2>🔵 PLAYER 1</h2>
+
+<h3>👤 캐릭터 색상</h3>
+
+<div class="selector">
+
+<button class="arrow" onclick="changeCharacter(1,-1)">‹</button>
+
+<div id="p1CharacterPreview" class="preview"></div>
+
+<button class="arrow" onclick="changeCharacter(1,1)">›</button>
+
+</div>
+
+
+<h3>🔫 무기</h3>
+
+<div class="weapon-box">
+
+<div id="p1WeaponCurrent"
+class="weapon-current"
+onclick="toggleWeaponPopup(1)">
+</div>
+
+<div id="p1WeaponPopup"
+class="weapon-popup hidden">
+</div>
+
+</div>
+
+</div>
+
+
+<!-- P2 -->
+
+<div class="panel p2">
+
+<h2><span id="p2Label">🔴 PLAYER 2</span></h2>
+
+<h3>👤 캐릭터 색상</h3>
+
+<div class="selector">
+
+<button class="arrow" onclick="changeCharacter(2,-1)">‹</button>
+
+<div id="p2CharacterPreview" class="preview"></div>
+
+<button class="arrow" onclick="changeCharacter(2,1)">›</button>
+
+</div>
+
+
+<h3>🔫 무기</h3>
+
+<div class="weapon-box">
+
+<div id="p2WeaponCurrent"
+class="weapon-current"
+onclick="toggleWeaponPopup(2)">
+</div>
+
+<div id="p2WeaponPopup"
+class="weapon-popup hidden">
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- MAP -->
+
+<div class="panel" style="margin-top:8px">
+
+<h2>🗺️ 맵 선택</h2>
+
+<div class="selector">
+
+<button class="arrow" onclick="changeMap(-1)">‹</button>
+
+<div id="mapPreview" class="preview map"></div>
+
+<button class="arrow" onclick="changeMap(1)">›</button>
+
+</div>
+
+</div>
+
+
+<button class="start" onclick="startGame()">
+🔥 START BATTLE
+</button>
+
+
+<div class="controls">
+
+<span id="p1ControlsText">P1 : WASD 이동 / W 점프 / F 공격</span>
+&nbsp; | &nbsp;
+<span id="p2ControlsText">P2 : 방향키 이동 / ↑ 점프 / SPACE 공격</span>
+
+<br><br>
+
+3판 2선승 · 매치 완료 시 🪙 <b>무조건 +1 COIN</b>
+
+</div>
+
+</div>
+</div>
+
+
+<!-- =====================================================
+게임 화면
+===================================================== -->
+
+<div id="gameScreen" class="screen hidden">
+
+<div class="wrap">
+
+<div class="hud">
+
+<span id="p1hud">🔵 P1 HP 100</span>
+
+<button class="back" onclick="backToSelect()">
+← 선택 화면
+</button>
+
+<span id="p2hud">P2 HP 100 🔴</span>
+
+</div>
+
+<div id="score" class="score">
+P1 0 : 0 P2 · ROUND 1
+</div>
+
+<canvas id="game" width="1152" height="648"></canvas>
+
+<div id="message"></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+이미지
+===================================================== */
+
+const svg=s =>
+"data:image/svg+xml;charset=UTF-8,"+
+encodeURIComponent(s);
+
+
+/* =====================================================
+캐릭터 8개
+===================================================== */
+
+const characterColors={
+blue:"#38a8ff",
+red:"#ff4f6d",
+green:"#35d399",
+purple:"#a78bfa",
+yellow:"#facc15",
+orange:"#fb923c",
+cyan:"#22d3ee",
+pink:"#f472b6"
+};
+
+const characterNames={
+blue:"BLUE",
+red:"RED",
+green:"GREEN",
+purple:"PURPLE",
+yellow:"YELLOW",
+orange:"ORANGE",
+cyan:"CYAN",
+pink:"PINK"
+};
+
+const characters=Object.keys(characterColors);
+
+function characterImage(color){
+
+return svg(`
+<svg xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 220 180">
+
+<rect width="220" height="180" rx="20" fill="#0b1220"/>
+
+<circle cx="110" cy="42" r="25"
+fill="none"
+stroke="${characterColors[color]}"
+stroke-width="10"/>
+
+<path d="
+M110 68 V120
+M110 80 L60 105
+M110 80 L160 105
+M110 120 L72 160
+M110 120 L148 160"
+fill="none"
+stroke="${characterColors[color]}"
+stroke-width="11"
+stroke-linecap="round"/>
+
+<circle cx="101" cy="36" r="3" fill="white"/>
+<circle cx="119" cy="36" r="3" fill="white"/>
+
+</svg>
+`);
+}
+
+
+/* =====================================================
+무기 8개
+===================================================== */
+
+const weapons=[
+"blaster",
+"shotgun",
+"laser",
+"rocket",
+"sniper",
+"plasma",
+"chaingun",
+"railgun",
+"grenade",
+"missile"
+];
+
+const weaponNames={
+blaster:"블래스터",
+shotgun:"샷건",
+laser:"레이저",
+rocket:"로켓",
+sniper:"스나이퍼",
+plasma:"플라즈마",
+chaingun:"체인건",
+railgun:"레일건",
+grenade:"수류탄",
+missile:"미사일"
+};
+
+
+/* 무기 가격 0~9 */
+
+const weaponPrices={
+blaster:0,
+shotgun:1,
+laser:2,
+rocket:3,
+sniper:4,
+plasma:5,
+chaingun:6,
+railgun:7,
+grenade:8,
+missile:9
+};
+
+
+function weaponImage(type){
+
+let body="#cbd5e1";
+let extra="";
+
+if(type==="shotgun")
+body="#a78bfa";
+
+if(type==="laser"){
+body="#334155";
+extra=`
+<line x1="215" y1="75"
+x2="285" y2="75"
+stroke="#67e8f9"
+stroke-width="8"/>
+`;
+}
+
+if(type==="rocket"){
+body="#f59e0b";
+extra=`
+<path d="M215 65 L275 80 L215 95Z"
+fill="#fb7185"/>
+`;
+}
+
+if(type==="sniper"){
+body="#64748b";
+extra=`
+<rect x="55" y="45"
+width="130" height="10"
+rx="5"
+fill="#94a3b8"/>
+`;
+}
+
+if(type==="plasma"){
+body="#22d3ee";
+extra=`
+<circle cx="270" cy="80"
+r="15"
+fill="#67e8f9"/>
+`;
+}
+
+if(type==="railgun"){
+body="#475569";
+extra=`
+<line x1="210" y1="60"
+x2="290" y2="60"
+stroke="#c084fc"
+stroke-width="7"/>
+`;
+}
+
+if(type==="missile"){
+body="#ef4444";
+extra=`
+<path d="M210 65 L280 80 L210 95Z"
+fill="#f97316"/>
+<circle cx="280" cy="80"
+r="7"
+fill="#fde047"/>
+`;
+}
+
+if(type==="chaingun"){
+body="#fb923c";
+extra=`
+<rect x="205" y="55" width="80" height="9" rx="3" fill="#78350f"/>
+<rect x="205" y="70" width="80" height="9" rx="3" fill="#78350f"/>
+<rect x="205" y="85" width="80" height="9" rx="3" fill="#78350f"/>
+`;
+}
+
+if(type==="grenade"){
+body="#4ade80";
+extra=`
+<circle cx="255" cy="80" r="18" fill="#166534"/>
+<rect x="247" y="55" width="16" height="14" rx="3" fill="#a3e635"/>
+`;
+}
+
+return svg(`
+<svg xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 300 160">
+
+<rect width="300" height="160"
+rx="18"
+fill="#0b1220"/>
+
+<path d="
+M40 65
+H215
+V92
+H115
+L102 125
+H65
+L75 92
+H40
+Z"
+fill="${body}"/>
+
+<rect x="155" y="53"
+width="80"
+height="12"
+rx="6"
+fill="#64748b"/>
+
+<circle cx="215" cy="78"
+r="8"
+fill="#fbbf24"/>
+
+${extra}
+
+<text x="150" y="145"
+text-anchor="middle"
+fill="white"
+font-size="17"
+font-family="Arial">
+${weaponNames[type]}
+</text>
+
+</svg>
+`);
+}
+
+
+/* =====================================================
+맵 8개
+===================================================== */
+
+const maps=[
+"arena",
+"factory",
+"city",
+"sky",
+"desert",
+"ice",
+"volcano",
+"canyon",
+"temple",
+"space"
+];
+
+const mapNames={
+arena:"아레나",
+factory:"공장",
+city:"도시",
+sky:"스카이 베이스",
+desert:"사막",
+ice:"아이스 월드",
+volcano:"화산",
+canyon:"협곡",
+temple:"고대 사원",
+space:"우주 기지"
+};
+
+
+/* 맵 가격 0~9 */
+
+const mapPrices={
+arena:0,
+factory:1,
+city:2,
+sky:3,
+desert:4,
+ice:5,
+volcano:6,
+canyon:7,
+temple:8,
+space:9
+};
+
+
+function mapImage(type){
+
+let bg="#182033";
+let objects="";
+
+
+if(type==="arena"){
+
+objects=`
+<rect x="15" y="105"
+width="370" height="30"
+fill="#64748b"/>
+
+<rect x="55" y="65"
+width="90" height="18"
+fill="#94a3b8"/>
+
+<rect x="255" y="65"
+width="90" height="18"
+fill="#94a3b8"/>
+`;
+
+}
+
+
+if(type==="factory"){
+
+bg="#293238";
+
+objects=`
+<rect x="15" y="110"
+width="370" height="25"
+fill="#64748b"/>
+
+<rect x="45" y="55"
+width="100" height="18"
+fill="#94a3b8"/>
+
+<rect x="255" y="40"
+width="90" height="18"
+fill="#94a3b8"/>
+
+<circle cx="200" cy="70"
+r="35"
+fill="#475569"/>
+`;
+
+}
+
+
+if(type==="city"){
+
+bg="#17233d";
+
+objects=`
+<rect x="15" y="115"
+width="370" height="20"
+fill="#64748b"/>
+
+<rect x="35" y="55"
+width="55" height="60"
+fill="#334155"/>
+
+<rect x="115" y="30"
+width="65" height="85"
+fill="#3b4c6b"/>
+
+<rect x="215" y="65"
+width="60" height="50"
+fill="#334155"/>
+
+<rect x="305" y="25"
+width="55" height="90"
+fill="#405577"/>
+`;
+
+}
+
+
+if(type==="sky"){
+
+bg="#07152f";
+
+objects=`
+<rect x="15" y="115"
+width="370" height="20"
+fill="#64748b"/>
+
+<rect x="50" y="82"
+width="80" height="12"
+fill="#94a3b8"/>
+
+<rect x="160" y="55"
+width="80" height="12"
+fill="#94a3b8"/>
+
+<rect x="280" y="82"
+width="80" height="12"
+fill="#94a3b8"/>
+
+<circle cx="40" cy="25" r="2" fill="white"/>
+<circle cx="100" cy="35" r="2" fill="white"/>
+<circle cx="190" cy="20" r="2" fill="white"/>
+<circle cx="300" cy="30" r="2" fill="white"/>
+`;
+}
+
+
+if(type==="desert"){
+
+bg="#4b3320";
+
+objects=`
+<rect x="0" y="110"
+width="400" height="40"
+fill="#a16207"/>
+
+<path d="M20 110 Q80 60 140 110"
+fill="#d6a354"/>
+
+<path d="M250 110 Q310 55 380 110"
+fill="#d6a354"/>
+`;
+}
+
+
+if(type==="ice"){
+
+bg="#102b40";
+
+objects=`
+<rect x="0" y="110"
+width="400" height="40"
+fill="#bae6fd"/>
+
+<polygon points="60,110 100,40 140,110"
+fill="#dbeafe"/>
+
+<polygon points="270,110 315,30 360,110"
+fill="#e0f2fe"/>
+`;
+}
+
+
+if(type==="volcano"){
+
+bg="#291313";
+
+objects=`
+<rect x="0" y="110"
+width="400" height="40"
+fill="#3f3f46"/>
+
+<polygon points="80,110 150,25 220,110"
+fill="#52525b"/>
+
+<path d="M145 55 Q150 80 160 105"
+stroke="#f97316"
+stroke-width="10"
+fill="none"/>
+`;
+}
+
+
+if(type==="space"){
+
+bg="#030712";
+
+objects=`
+<rect x="0" y="110"
+width="400" height="40"
+fill="#475569"/>
+
+<rect x="65" y="75"
+width="100" height="12"
+fill="#64748b"/>
+
+<rect x="230" y="45"
+width="100" height="12"
+fill="#64748b"/>
+
+<circle cx="40" cy="25" r="3" fill="white"/>
+<circle cx="110" cy="35" r="2" fill="white"/>
+<circle cx="200" cy="20" r="3" fill="white"/>
+<circle cx="350" cy="30" r="2" fill="white"/>
+`;
+}
+
+
+if(type==="canyon"){
+
+bg="#7c4a24";
+
+objects=`
+<rect x="0" y="115"
+width="400" height="35"
+fill="#5c3a21"/>
+
+<polygon points="30,115 90,50 150,115"
+fill="#9a5f34"/>
+
+<polygon points="230,115 300,40 370,115"
+fill="#8a5228"/>
+`;
+}
+
+
+if(type==="temple"){
+
+bg="#2a2418";
+
+objects=`
+<rect x="0" y="115"
+width="400" height="35"
+fill="#8a7355"/>
+
+<rect x="60" y="40" width="18" height="75" fill="#c9b896"/>
+<rect x="150" y="40" width="18" height="75" fill="#c9b896"/>
+<rect x="240" y="40" width="18" height="75" fill="#c9b896"/>
+<rect x="330" y="40" width="18" height="75" fill="#c9b896"/>
+
+<rect x="50" y="30" width="310" height="14" fill="#a8916b"/>
+`;
+}
+
+
+return svg(`
+<svg xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 400 150">
+
+<rect width="400"
+height="150"
+fill="${bg}"/>
+
+${objects}
+
+<text x="200" y="145"
+text-anchor="middle"
+fill="white"
+font-size="16">
+${mapNames[type]}
+</text>
+
+</svg>
+`);
+}
+
+
+/* =====================================================
+저장 데이터
+===================================================== */
+
+let coins=
+Number(localStorage.getItem("stickmanCoins")||0);
+
+
+/* 기본 잠금 */
+
+let unlockedColors=
+JSON.parse(
+localStorage.getItem("stickmanColors")||
+'["blue","red"]'
+);
+
+let unlockedWeapons=
+JSON.parse(
+localStorage.getItem("stickmanWeapons")||
+'["blaster"]'
+);
+
+let unlockedMaps=
+JSON.parse(
+localStorage.getItem("stickmanMaps")||
+'["arena"]'
+);
+
+
+/* =====================================================
+선택 상태
+===================================================== */
+
+let selection={
+p1color:"blue",
+p2color:"red",
+p1weapon:"blaster",
+p2weapon:"blaster",
+map:"arena"
+};
+
+let charIndex={
+p1:characters.indexOf("blue"),
+p2:characters.indexOf("red")
+};
+
+let mapIndex=0;
+
+let vsAI=false;
+
+function setMode(ai){
+
+vsAI=ai;
+
+document.getElementById("mode1v1")
+.classList.toggle("active",!ai);
+
+document.getElementById("modeAI")
+.classList.toggle("active",ai);
+
+document.getElementById("p2Label")
+.textContent=
+ai?"🤖 PLAYER 2 (AI)":"🔴 PLAYER 2";
+
+document.getElementById("p2ControlsText")
+.textContent=
+ai
+?
+"P2 : 🤖 AI가 자동으로 플레이합니다"
+:
+"P2 : 방향키 이동 / ↑ 점프 / SPACE 공격";
+
+}
+
+
+/* =====================================================
+저장
+===================================================== */
+
+function saveData(){
+
+localStorage.setItem(
+"stickmanCoins",
+coins
+);
+
+localStorage.setItem(
+"stickmanColors",
+JSON.stringify(unlockedColors)
+);
+
+localStorage.setItem(
+"stickmanWeapons",
+JSON.stringify(unlockedWeapons)
+);
+
+localStorage.setItem(
+"stickmanMaps",
+JSON.stringify(unlockedMaps)
+);
+
+}
+
+
+function updateCoinText(){
+
+document.getElementById("coinText")
+.textContent=coins;
+
+}
+
+
+/* =====================================================
+캐릭터 화살표
+===================================================== */
+
+function changeCharacter(player,direction){
+
+let key=player===1?"p1":"p2";
+
+charIndex[key]+=direction;
+
+if(charIndex[key]<0)
+charIndex[key]=characters.length-1;
+
+if(charIndex[key]>=characters.length)
+charIndex[key]=0;
+
+const color=characters[charIndex[key]];
+
+selection[key+"color"]=color;
+
+renderCharacter(player);
+
+}
+
+
+function renderCharacter(player){
+
+const key=player===1?"p1":"p2";
+const color=selection[key+"color"];
+
+const unlocked=
+unlockedColors.includes(color);
+
+const price=
+characters.indexOf(color);
+
+
+const box=
+document.getElementById(
+key+"CharacterPreview"
+);
+
+box.innerHTML="";
+
+const img=
+document.createElement("img");
+
+img.src=characterImage(color);
+
+if(!unlocked)
+img.classList.add("locked-preview");
+
+box.appendChild(img);
+
+
+const name=
+document.createElement("div");
+
+name.className="preview-name";
+
+name.textContent=
+characterNames[color];
+
+box.appendChild(name);
+
+
+const status=
+document.createElement("div");
+
+status.className="preview-status";
+
+if(unlocked){
+
+const t=
+document.createElement("div");
+
+t.className="unlocked-text";
+
+t.textContent="✓ 사용 가능";
+
+status.appendChild(t);
+
+}else{
+
+const cost=
+Math.max(1,price);
+
+const p=
+document.createElement("div");
+
+p.className="preview-price";
+
+p.innerHTML=
+`🔒 <span class="price-big">${cost} 🪙</span>`;
+
+status.appendChild(p);
+
+const btn=
+document.createElement("button");
+
+btn.className="buy-btn";
+
+btn.textContent="구매";
+
+btn.onclick=()=>{
+buyItem("character",color);
+};
+
+status.appendChild(btn);
+
+}
+
+box.appendChild(status);
+
+}
+
+
+/* =====================================================
+맵 화살표
+===================================================== */
+
+function changeMap(direction){
+
+mapIndex+=direction;
+
+if(mapIndex<0)
+mapIndex=maps.length-1;
+
+if(mapIndex>=maps.length)
+mapIndex=0;
+
+selection.map=maps[mapIndex];
+
+renderMap();
+
+}
+
+
+function renderMap(){
+
+const type=selection.map;
+
+const unlocked=
+unlockedMaps.includes(type);
+
+const box=
+document.getElementById("mapPreview");
+
+box.innerHTML="";
+
+const img=
+document.createElement("img");
+
+img.src=mapImage(type);
+
+if(!unlocked)
+img.classList.add("locked-preview");
+
+box.appendChild(img);
+
+
+const name=
+document.createElement("div");
+
+name.className="preview-name";
+
+name.textContent=
+mapNames[type];
+
+box.appendChild(name);
+
+
+const status=
+document.createElement("div");
+
+status.className="preview-status";
+
+if(unlocked){
+
+const t=
+document.createElement("div");
+
+t.className="unlocked-text";
+
+t.textContent="✓ 사용 가능";
+
+status.appendChild(t);
+
+}else{
+
+const cost=mapPrices[type];
+
+const p=
+document.createElement("div");
+
+p.className="preview-price";
+
+p.innerHTML=
+`🔒 <span class="price-big">${cost} 🪙</span>`;
+
+status.appendChild(p);
+
+const btn=
+document.createElement("button");
+
+btn.className="buy-btn";
+
+btn.textContent="구매";
+
+btn.onclick=()=>{
+buyItem("map",type);
+};
+
+status.appendChild(btn);
+
+}
+
+box.appendChild(status);
+
+}
+
+
+/* =====================================================
+무기 팝업
+===================================================== */
+
+function toggleWeaponPopup(player){
+
+const otherPlayer=player===1?2:1;
+
+const otherPopup=
+document.getElementById(
+`p${otherPlayer}WeaponPopup`
+);
+
+/* 한 번에 하나의 팝업만 열리도록 */
+otherPopup.classList.add("hidden");
+
+const popup=
+document.getElementById(
+`p${player}WeaponPopup`
+);
+
+popup.classList.toggle("hidden");
+
+if(!popup.classList.contains("hidden"))
+renderWeaponPopup(player);
+
+}
+
+
+function renderWeaponPopup(player){
+
+const key=player===1?"p1":"p2";
+
+const popup=
+document.getElementById(
+key+"WeaponPopup"
+);
+
+popup.innerHTML="";
+
+const title=
+document.createElement("div");
+
+title.className="weapon-popup-title";
+
+title.textContent="🔫 무기 선택";
+
+popup.appendChild(title);
+
+
+const list=
+document.createElement("div");
+
+list.className="weapon-list";
+
+weapons.forEach(type=>{
+
+const option=
+document.createElement("div");
+
+option.className="weapon-option";
+
+if(selection[key+"weapon"]===type)
+option.classList.add("selected");
+
+const unlocked=
+unlockedWeapons.includes(type);
+
+if(!unlocked)
+option.classList.add("locked");
+
+
+const img=
+document.createElement("img");
+
+img.src=weaponImage(type);
+
+option.appendChild(img);
+
+
+const name=
+document.createElement("div");
+
+name.className="weapon-option-name";
+
+name.textContent=
+weaponNames[type];
+
+option.appendChild(name);
+
+
+if(unlocked){
+
+const text=
+document.createElement("div");
+
+text.className="weapon-option-price";
+
+text.textContent="✓ 사용 가능";
+
+option.appendChild(text);
+
+}else{
+
+const price=
+weaponPrices[type];
+
+const text=
+document.createElement("div");
+
+text.className="weapon-option-price";
+
+text.textContent=
+`🔒 ${price} 🪙`;
+
+option.appendChild(text);
+
+}
+
+
+option.onclick=()=>{
+
+if(!unlocked){
+
+buyItem("weapon",type);
+
+return;
+
+}
+
+selection[key+"weapon"]=type;
+
+renderWeaponCurrent(player);
+
+renderWeaponPopup(player);
+
+};
+
+list.appendChild(option);
+
+});
+
+
+popup.appendChild(list);
+
+
+const close=
+document.createElement("button");
+
+close.className="weapon-close";
+
+close.textContent="닫기";
+
+close.onclick=()=>{
+popup.classList.add("hidden");
+};
+
+popup.appendChild(close);
+
+}
+
+
+function renderWeaponCurrent(player){
+
+const key=player===1?"p1":"p2";
+
+const weapon=
+selection[key+"weapon"];
+
+const box=
+document.getElementById(
+key+"WeaponCurrent"
+);
+
+box.innerHTML="";
+
+const img=
+document.createElement("img");
+
+img.src=weaponImage(weapon);
+
+box.appendChild(img);
+
+
+const name=
+document.createElement("div");
+
+name.className="weapon-current-name";
+
+name.textContent=
+weaponNames[weapon];
+
+box.appendChild(name);
+
+}
+
+
+/* =====================================================
+구매
+===================================================== */
+
+function buyItem(type,item){
+
+let price=0;
+
+if(type==="weapon")
+price=weaponPrices[item];
+
+if(type==="map")
+price=mapPrices[item];
+
+if(type==="character")
+price=Math.max(1,characters.indexOf(item));
+
+
+if(coins<price){
+
+alert(
+`코인이 부족합니다!\n필요 코인: ${price}\n현재 코인: ${coins}`
+);
+
+return;
+
+}
+
+
+coins-=price;
+
+
+if(type==="weapon" &&
+!unlockedWeapons.includes(item)){
+
+unlockedWeapons.push(item);
+
+}
+
+if(type==="map" &&
+!unlockedMaps.includes(item)){
+
+unlockedMaps.push(item);
+
+}
+
+if(type==="character" &&
+!unlockedColors.includes(item)){
+
+unlockedColors.push(item);
+
+}
+
+
+saveData();
+updateCoinText();
+
+renderCharacter(1);
+renderCharacter(2);
+renderMap();
+
+renderWeaponCurrent(1);
+renderWeaponCurrent(2);
+
+renderWeaponPopup(1);
+renderWeaponPopup(2);
+
+}
+
+
+/* =====================================================
+선택 화면 초기화
+===================================================== */
+
+function renderSelection(){
+
+renderCharacter(1);
+renderCharacter(2);
+
+renderMap();
+
+renderWeaponCurrent(1);
+renderWeaponCurrent(2);
+
+updateCoinText();
+
+}
+
+
+/* =====================================================
+게임
+===================================================== */
+
+const canvas=
+document.getElementById("game");
+
+const ctx=
+canvas.getContext("2d");
+
+const W=canvas.width;
+const H=canvas.height;
+
+const keys={};
+
+
+window.addEventListener("keydown",e=>{
+
+if(e.code==="ShiftRight")
+keys.rightShift=true;
+
+else
+keys[e.key.toLowerCase()]=true;
+
+if(
+e.key.startsWith("Arrow")||
+e.code==="ShiftRight"||
+e.key===" "
+)
+e.preventDefault();
+
+});
+
+
+window.addEventListener("keyup",e=>{
+
+if(e.code==="ShiftRight")
+keys.rightShift=false;
+
+else
+keys[e.key.toLowerCase()]=false;
+
+});
+
+
+let p1;
+let p2;
+
+let bullets=[];
+let platforms=[];
+
+let running=false;
+
+let round=1;
+
+let p1Rounds=0;
+let p2Rounds=0;
+
+let lastTime=0;
+
+
+/* =====================================================
+무기 스탯 8개
+===================================================== */
+
+const weaponStats={
+
+blaster:{
+damage:12,
+cooldown:280,
+speed:13,
+count:1,
+spread:0,
+size:4
+},
+
+shotgun:{
+damage:7,
+cooldown:650,
+speed:11,
+count:5,
+spread:.25,
+size:4
+},
+
+laser:{
+damage:20,
+cooldown:500,
+speed:19,
+count:1,
+spread:0,
+size:3
+},
+
+rocket:{
+damage:35,
+cooldown:900,
+speed:8,
+count:1,
+spread:0,
+size:9
+},
+
+sniper:{
+damage:48,
+cooldown:1200,
+speed:25,
+count:1,
+spread:0,
+size:4
+},
+
+plasma:{
+damage:26,
+cooldown:600,
+speed:15,
+count:2,
+spread:.08,
+size:7
+},
+
+railgun:{
+damage:65,
+cooldown:1500,
+speed:30,
+count:1,
+spread:0,
+size:5
+},
+
+chaingun:{
+damage:5,
+cooldown:100,
+speed:16,
+count:1,
+spread:.07,
+size:3
+},
+
+grenade:{
+damage:55,
+cooldown:1300,
+speed:7,
+count:1,
+spread:0,
+size:10
+},
+
+missile:{
+damage:42,
+cooldown:1050,
+speed:9,
+count:2,
+spread:.1,
+size:8
+}
+
+};
+
+
+/* =====================================================
+플레이어
+===================================================== */
+
+function makePlayer(
+x,
+color,
+weapon,
+controls
+){
+
+return{
+
+x:x,
+y:480,
+
+width:34,
+height:70,
+
+vx:0,
+vy:0,
+
+color:color,
+
+weapon:weapon,
+
+controls:controls,
+
+hp:100,
+maxHp:100,
+
+face:color==="blue"?1:-1,
+
+ground:false,
+
+lastShot:0,
+
+attackFlash:0,
+
+aiJumpTimer:0
+
+};
+
+}
+
+
+/* =====================================================
+맵 생성
+===================================================== */
+
+function buildMap(type){
+
+platforms=[
+
+{x:0,y:590,w:W,h:58},
+
+{x:120,y:465,w:230,h:18},
+
+{x:802,y:465,w:230,h:18}
+
+];
+
+
+if(type==="factory"){
+
+platforms.push(
+{x:410,y:370,w:330,h:18},
+{x:40,y:290,w:190,h:18},
+{x:920,y:290,w:190,h:18}
+);
+
+}
+
+
+if(type==="city"){
+
+platforms.push(
+{x:70,y:400,w:160,h:18},
+{x:300,y:310,w:180,h:18},
+{x:610,y:405,w:190,h:18},
+{x:875,y:300,w:190,h:18}
+);
+
+}
+
+
+if(type==="sky"){
+
+platforms=[
+{x:0,y:590,w:W,h:58},
+{x:90,y:480,w:190,h:18},
+{x:480,y:400,w:190,h:18},
+{x:870,y:480,w:190,h:18},
+{x:300,y:240,w:180,h:18},
+{x:670,y:240,w:180,h:18}
+];
+
+}
+
+
+if(type==="desert"){
+
+platforms.push(
+{x:400,y:400,w:330,h:18},
+{x:50,y:300,w:170,h:18},
+{x:920,y:300,w:170,h:18}
+);
+
+}
+
+
+if(type==="ice"){
+
+platforms.push(
+{x:390,y:390,w:370,h:18},
+{x:70,y:270,w:180,h:18},
+{x:900,y:270,w:180,h:18}
+);
+
+}
+
+
+if(type==="volcano"){
+
+platforms.push(
+{x:410,y:370,w:330,h:18},
+{x:80,y:290,w:180,h:18},
+{x:890,y:290,w:180,h:18}
+);
+
+}
+
+
+if(type==="space"){
+
+platforms=[
+{x:0,y:590,w:W,h:58},
+{x:70,y:480,w:210,h:18},
+{x:470,y:390,w:210,h:18},
+{x:870,y:480,w:210,h:18},
+{x:300,y:230,w:170,h:18},
+{x:700,y:230,w:170,h:18}
+];
+
+}
+
+
+if(type==="canyon"){
+
+platforms.push(
+{x:400,y:400,w:330,h:18},
+{x:60,y:300,w:170,h:18},
+{x:910,y:300,w:170,h:18}
+);
+
+}
+
+
+if(type==="temple"){
+
+platforms=[
+{x:0,y:590,w:W,h:58},
+{x:100,y:470,w:200,h:18},
+{x:820,y:470,w:200,h:18},
+{x:420,y:380,w:300,h:18},
+{x:150,y:260,w:200,h:18},
+{x:780,y:260,w:200,h:18}
+];
+
+}
+
+}
+
+
+/* =====================================================
+새 라운드
+===================================================== */
+
+function startRound(){
+
+p1=makePlayer(
+130,
+selection.p1color,
+selection.p1weapon,
+{
+left:"a",
+right:"d",
+jump:"w",
+attack:"f"
+}
+);
+
+
+p2=makePlayer(
+988,
+selection.p2color,
+selection.p2weapon,
+{
+left:"arrowleft",
+right:"arrowright",
+jump:"arrowup",
+attack:" "
+}
+);
+
+
+buildMap(selection.map);
+
+bullets=[];
+
+running=true;
+
+document.getElementById("message")
+.textContent="🔥 FIGHT!";
+
+updateScore();
+
+}
+
+
+/* =====================================================
+게임 시작
+===================================================== */
+
+function startGame(){
+
+/* 잠긴 아이템이면 시작 방지 */
+
+if(!unlockedColors.includes(selection.p1color) ||
+!unlockedColors.includes(selection.p2color)){
+
+alert("선택한 캐릭터를 먼저 구매하세요!");
+
+return;
+
+}
+
+if(!unlockedWeapons.includes(selection.p1weapon) ||
+!unlockedWeapons.includes(selection.p2weapon)){
+
+alert("선택한 무기를 먼저 구매하세요!");
+
+return;
+
+}
+
+if(!unlockedMaps.includes(selection.map)){
+
+alert("선택한 맵을 먼저 구매하세요!");
+
+return;
+
+}
+
+
+round=1;
+
+p1Rounds=0;
+p2Rounds=0;
+
+document
+.getElementById("selectScreen")
+.classList.add("hidden");
+
+document
+.getElementById("gameScreen")
+.classList.remove("hidden");
+
+startRound();
+
+}
+
+
+/* =====================================================
+선택 화면
+===================================================== */
+
+function backToSelect(){
+
+running=false;
+
+document
+.getElementById("gameScreen")
+.classList.add("hidden");
+
+document
+.getElementById("selectScreen")
+.classList.remove("hidden");
+
+renderSelection();
+
+}
+
+
+/* =====================================================
+점수
+===================================================== */
+
+function updateScore(){
+
+document.getElementById("score")
+.textContent=
+`P1 ${p1Rounds} : ${p2Rounds} P2 · ROUND ${round}`;
+
+}
+
+
+/* =====================================================
+이동
+===================================================== */
+
+function computeAIDecision(ai){
+
+const target=
+ai===p2?p1:p2;
+
+const dx=target.x-ai.x;
+const dist=Math.abs(dx);
+
+const face=
+dx>=0?1:-1;
+
+let left=false;
+let right=false;
+
+const preferred=300;
+
+if(dist>preferred+60){
+
+if(dx>0)
+right=true;
+else
+left=true;
+
+}else if(dist<preferred-100){
+
+if(dx>0)
+left=true;
+else
+right=true;
+
+}
+
+
+ai.aiJumpTimer=
+(ai.aiJumpTimer||0)-16;
+
+let jump=false;
+
+if(ai.aiJumpTimer<=0){
+
+if(
+ai.ground&&
+(
+target.y<ai.y-30||
+Math.random()<0.02
+)
+){
+
+jump=true;
+
+ai.aiJumpTimer=
+550+Math.random()*750;
+
+}
+
+}
+
+
+const attack=
+dist<650;
+
+
+return{
+left:left,
+right:right,
+jump:jump,
+attack:attack,
+face:face
+};
+
+}
+
+
+function updatePlayer(p){
+
+const c=p.controls;
+
+let left,right,jumpPressed,attackPressed;
+let faceOverride=null;
+
+if(p===p2&&vsAI){
+
+const d=computeAIDecision(p);
+
+left=d.left;
+right=d.right;
+jumpPressed=d.jump;
+attackPressed=d.attack;
+faceOverride=d.face;
+
+}else{
+
+left=!!keys[c.left];
+right=!!keys[c.right];
+jumpPressed=!!keys[c.jump];
+attackPressed=!!keys[c.attack];
+
+}
+
+p.vx=0;
+
+
+if(left){
+
+p.vx=-4.7;
+p.face=-1;
+
+}
+
+
+if(right){
+
+p.vx=4.7;
+p.face=1;
+
+}
+
+
+if(faceOverride!==null)
+p.face=faceOverride;
+
+
+if(
+jumpPressed&&
+p.ground
+){
+
+p.vy=-12;
+p.ground=false;
+
+}
+
+
+p.vy+=.58;
+
+p.x+=p.vx;
+
+p.y+=p.vy;
+
+p.ground=false;
+
+
+for(const platform of platforms){
+
+if(
+p.x+p.width>platform.x&&
+p.x<platform.x+platform.w&&
+p.y+p.height>=platform.y&&
+p.y+p.height<=platform.y+25&&
+p.vy>=0
+){
+
+p.y=platform.y-p.height;
+p.vy=0;
+p.ground=true;
+
+}
+
+}
+
+
+p.x=Math.max(
+0,
+Math.min(
+W-p.width,
+p.x
+)
+);
+
+
+if(attackPressed)
+shoot(p);
+
+}
+
+
+/* =====================================================
+공격
+===================================================== */
+
+function shoot(p){
+
+const weapon=
+weaponStats[p.weapon];
+
+const now=
+performance.now();
+
+
+if(
+now-p.lastShot<
+weapon.cooldown
+)
+return;
+
+
+p.lastShot=now;
+p.attackFlash=100;
+
+
+for(
+let i=0;
+i<weapon.count;
+i++
+){
+
+const angle=
+(i-(weapon.count-1)/2)
+*weapon.spread;
+
+const direction=p.face;
+
+
+bullets.push({
+
+x:p.x+p.width/2+
+direction*22,
+
+y:p.y+30,
+
+vx:
+Math.cos(angle)*
+weapon.speed*
+direction,
+
+vy:
+Math.sin(angle)*
+weapon.speed,
+
+owner:p,
+
+damage:weapon.damage,
+
+type:p.weapon,
+
+size:weapon.size,
+
+life:1400
+
+});
+
+}
+
+}
+
+
+/* =====================================================
+총알
+===================================================== */
+
+function updateBullets(dt){
+
+for(
+let i=bullets.length-1;
+i>=0;
+i--
+){
+
+const b=bullets[i];
+
+b.x+=b.vx;
+b.y+=b.vy;
+
+b.life-=dt;
+
+
+if(
+b.type==="rocket"||
+b.type==="missile"||
+b.type==="grenade"
+)
+b.vy+=.06;
+
+
+const target=
+b.owner===p1?p2:p1;
+
+
+if(
+b.x>target.x&&
+b.x<target.x+target.width&&
+b.y>target.y&&
+b.y<target.y+target.height
+){
+
+target.hp-=b.damage;
+
+bullets.splice(i,1);
+
+continue;
+
+}
+
+
+if(
+b.life<=0||
+b.x<0||
+b.x>W||
+b.y<0||
+b.y>H
+){
+
+bullets.splice(i,1);
+
+}
+
+}
+
+}
+
+
+/* =====================================================
+라운드 종료
+===================================================== */
+
+function finishRound(){
+
+running=false;
+
+
+if(p1.hp<=0)
+p2Rounds++;
+else
+p1Rounds++;
+
+
+updateScore();
+
+
+if(
+p1Rounds>=2||
+p2Rounds>=2
+){
+
+setTimeout(()=>{
+
+/* ★ 매치 보상은 항상 정확히 1코인 */
+
+coins+=1;
+
+saveData();
+
+updateCoinText();
+
+
+document.getElementById("message")
+.textContent=
+p1Rounds>p2Rounds
+?
+"🏆 PLAYER 1 WINS! +1 🪙"
+:
+"🏆 PLAYER 2 WINS! +1 🪙";
+
+
+setTimeout(()=>{
+
+backToSelect();
+
+},1800);
+
+},500);
+
+return;
+
+}
+
+
+round++;
+
+setTimeout(()=>{
+
+startRound();
+
+},1300);
+
+}
+
+
+/* =====================================================
+업데이트
+===================================================== */
+
+function update(dt){
+
+if(!running)
+return;
+
+
+updatePlayer(p1);
+updatePlayer(p2);
+
+updateBullets(dt);
+
+
+p1.attackFlash=
+Math.max(
+0,
+p1.attackFlash-dt
+);
+
+p2.attackFlash=
+Math.max(
+0,
+p2.attackFlash-dt
+);
+
+
+if(
+p1.hp<=0||
+p2.hp<=0
+){
+
+finishRound();
+
+}
+
+}
+
+
+/* =====================================================
+배경
+===================================================== */
+
+function drawBackground(){
+
+const type=selection.map;
+
+
+if(type==="arena"){
+
+ctx.fillStyle="#182033";
+ctx.fillRect(0,0,W,H);
+
+}
+
+
+if(type==="factory"){
+
+ctx.fillStyle="#202a30";
+ctx.fillRect(0,0,W,H);
+
+for(let i=0;i<8;i++){
+
+ctx.fillStyle="#374151";
+
+ctx.fillRect(
+i*170,
+100+(i%2)*40,
+110,
+18
+);
+
+}
+
+}
+
+
+if(type==="city"){
+
+ctx.fillStyle="#17233d";
+ctx.fillRect(0,0,W,H);
+
+for(let i=0;i<15;i++){
+
+const height=
+100+(i*53)%250;
+
+ctx.fillStyle=
+i%2
+?
+"#293a5a"
+:
+"#334766";
+
+ctx.fillRect(
+i*82,
+590-height,
+62,
+height
+);
+
+for(
+let y=590-height+20;
+y<590;
+y+=30
+){
+
+ctx.fillStyle="#facc15";
+
+ctx.fillRect(
+i*82+12,
+y,
+7,
+11
+);
+
+}
+
+}
+
+}
+
+
+if(type==="sky"){
+
+ctx.fillStyle="#071126";
+ctx.fillRect(0,0,W,H);
+
+for(let i=0;i<100;i++){
+
+ctx.fillStyle="white";
+
+ctx.fillRect(
+(i*157)%W,
+(i*79)%560,
+2,
+2
+);
+
+}
+
+}
+
+
+if(type==="desert"){
+
+ctx.fillStyle="#d6a354";
+ctx.fillRect(0,0,W,H);
+
+}
+
+
+if(type==="ice"){
+
+ctx.fillStyle="#123047";
+ctx.fillRect(0,0,W,H);
+
+}
+
+
+if(type==="volcano"){
+
+ctx.fillStyle="#241010";
+ctx.fillRect(0,0,W,H);
+
+for(let i=0;i<12;i++){
+
+ctx.fillStyle="#7f1d1d";
+
+ctx.fillRect(
+i*110,
+120+(i%3)*50,
+80,
+15
+);
+
+}
+
+}
+
+
+if(type==="space"){
+
+ctx.fillStyle="#020617";
+ctx.fillRect(0,0,W,H);
+
+for(let i=0;i<120;i++){
+
+ctx.fillStyle="white";
+
+ctx.fillRect(
+(i*97)%W,
+(i*53)%580,
+2,
+2
+);
+
+}
+
+}
+
+
+if(type==="canyon"){
+
+ctx.fillStyle="#7c4a24";
+ctx.fillRect(0,0,W,H);
+
+for(let i=0;i<6;i++){
+
+ctx.fillStyle=
+i%2
+?
+"#9a5f34"
+:
+"#8a5228";
+
+ctx.fillRect(
+i*200,
+150+(i%2)*60,
+150,
+260
+);
+
+}
+
+}
+
+
+if(type==="temple"){
+
+ctx.fillStyle="#2a2418";
+ctx.fillRect(0,0,W,H);
+
+for(let i=0;i<10;i++){
+
+ctx.fillStyle="#8a7355";
+
+ctx.fillRect(
+i*120+30,
+70,
+30,
+420
+);
+
+}
+
+ctx.fillStyle="#a8916b";
+
+ctx.fillRect(0,60,W,20);
+
+}
+
+
+/* 플랫폼 */
+
+for(const p of platforms){
+
+ctx.fillStyle="#52627e";
+
+ctx.fillRect(
+p.x,
+p.y,
+p.w,
+p.h
+);
+
+ctx.fillStyle="#8ea3c4";
+
+ctx.fillRect(
+p.x,
+p.y,
+p.w,
+4
+);
+
+}
+
+}
+
+
+/* =====================================================
+스틱맨 + HP BAR
+===================================================== */
+
+function drawStickman(p){
+
+const color=
+characterColors[p.color];
+
+ctx.save();
+
+ctx.translate(
+p.x+p.width/2,
+p.y
+);
+
+ctx.strokeStyle=color;
+ctx.lineWidth=8;
+ctx.lineCap="round";
+
+
+if(p.attackFlash>0){
+
+ctx.shadowColor=color;
+ctx.shadowBlur=20;
+
+}
+
+
+/* 머리 */
+
+ctx.beginPath();
+
+ctx.arc(
+0,
+14,
+12,
+0,
+Math.PI*2
+);
+
+ctx.stroke();
+
+
+/* 몸 */
+
+ctx.beginPath();
+
+ctx.moveTo(0,27);
+ctx.lineTo(0,52);
+
+ctx.stroke();
+
+
+/* 팔 */
+
+ctx.beginPath();
+
+ctx.moveTo(0,35);
+
+ctx.lineTo(
+p.face*27,
+44
+);
+
+ctx.stroke();
+
+
+/* 다리 */
+
+ctx.beginPath();
+
+ctx.moveTo(0,52);
+
+ctx.lineTo(-16,70);
+
+ctx.moveTo(0,52);
+
+ctx.lineTo(16,70);
+
+ctx.stroke();
+
+
+/* 무기 */
+
+ctx.shadowBlur=0;
+
+ctx.strokeStyle="#e5e7eb";
+ctx.lineWidth=6;
+
+ctx.beginPath();
+
+ctx.moveTo(
+p.face*10,
+43
+);
+
+ctx.lineTo(
+p.face*38,
+43
+);
+
+ctx.stroke();
+
+
+/* HP BAR */
+
+const barWidth=55;
+const barHeight=7;
+
+const hpRatio=
+Math.max(
+0,
+p.hp/p.maxHp
+);
+
+
+ctx.fillStyle="#111827";
+
+ctx.fillRect(
+-barWidth/2,
+-12,
+barWidth,
+barHeight
+);
+
+
+ctx.fillStyle=
+hpRatio>0.5
+?
+"#22c55e"
+:
+hpRatio>0.25
+?
+"#facc15"
+:
+"#ef4444";
+
+
+ctx.fillRect(
+-barWidth/2,
+-12,
+barWidth*hpRatio,
+barHeight
+);
+
+
+ctx.strokeStyle="#fff";
+ctx.lineWidth=1;
+
+ctx.strokeRect(
+-barWidth/2,
+-12,
+barWidth,
+barHeight
+);
+
+
+ctx.restore();
+
+}
+
+
+/* =====================================================
+총알
+===================================================== */
+
+function drawBullets(){
+
+for(const b of bullets){
+
+if(
+b.type==="laser"||
+b.type==="plasma"
+)
+ctx.fillStyle="#67e8f9";
+
+else if(
+b.type==="rocket"||
+b.type==="missile"
+)
+ctx.fillStyle="#f59e0b";
+
+else if(b.type==="railgun")
+ctx.fillStyle="#c084fc";
+
+else if(b.type==="grenade")
+ctx.fillStyle="#4ade80";
+
+else if(b.type==="chaingun")
+ctx.fillStyle="#fb923c";
+
+else
+ctx.fillStyle="#fff";
+
+
+ctx.beginPath();
+
+ctx.arc(
+b.x,
+b.y,
+b.size,
+0,
+Math.PI*2
+);
+
+ctx.fill();
+
+
+if(
+b.type==="laser"||
+b.type==="railgun"
+){
+
+ctx.shadowColor=ctx.fillStyle;
+
+ctx.shadowBlur=15;
+
+ctx.fill();
+
+ctx.shadowBlur=0;
+
+}
+
+}
+
+}
+
+
+/* =====================================================
+HUD
+===================================================== */
+
+function drawHUD(){
+
+document.getElementById("p1hud")
+.textContent=
+"🔵 P1 HP "+
+Math.max(
+0,
+Math.ceil(p1.hp)
+);
+
+
+document.getElementById("p2hud")
+.textContent=
+"P2 HP "+
+Math.max(
+0,
+Math.ceil(p2.hp)
+)+
+" 🔴";
+
+}
+
+
+/* =====================================================
+렌더링
+===================================================== */
+
+function draw(){
+
+drawBackground();
+
+drawStickman(p1);
+
+drawStickman(p2);
+
+drawBullets();
+
+drawHUD();
+
+}
+
+
+/* =====================================================
+루프
+===================================================== */
+
+function loop(time){
+
+const dt=
+Math.min(
+32,
+time-(lastTime||time)
+);
+
+lastTime=time;
+
+update(dt);
+
+
+if(
+running||
+p1
+)
+draw();
+
+
+requestAnimationFrame(loop);
+
+}
+
+
+/* =====================================================
+시작
+===================================================== */
+
+renderSelection();
+
+requestAnimationFrame(loop);
+
+</script>
+
+</body>
+</html>
