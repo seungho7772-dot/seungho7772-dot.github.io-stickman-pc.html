@@ -45,6 +45,102 @@ margin-bottom:8px;
 font-size:12px;
 }
 
+.mode-toggle{
+display:flex;
+justify-content:center;
+gap:8px;
+margin-bottom:10px;
+}
+
+.mode-btn{
+background:#1b2942;
+border:2px solid #334155;
+color:#cbd5e1;
+padding:7px 16px;
+border-radius:10px;
+font-size:13px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.mode-btn:hover{
+border-color:#475569;
+}
+
+.mode-btn.active{
+background:#22c55e;
+border-color:#22c55e;
+color:#031308;
+}
+
+/* 모바일 터치 컨트롤 */
+
+.touch-controls{
+display:none;
+position:fixed;
+left:0;
+right:0;
+bottom:10px;
+justify-content:space-between;
+padding:0 12px;
+z-index:40;
+pointer-events:none;
+}
+
+.tc-side{
+display:grid;
+grid-template-columns:repeat(2,52px);
+grid-template-rows:repeat(2,52px);
+gap:8px;
+pointer-events:auto;
+}
+
+.tc-btn{
+width:52px;
+height:52px;
+border-radius:50%;
+border:2px solid rgba(255,255,255,.35);
+background:rgba(17,24,39,.6);
+color:white;
+font-size:19px;
+display:flex;
+align-items:center;
+justify-content:center;
+user-select:none;
+-webkit-user-select:none;
+touch-action:none;
+}
+
+.tc-btn.tc-attack{
+background:rgba(239,68,68,.5);
+border-color:rgba(248,113,113,.7);
+}
+
+.tc-btn.active-touch{
+background:rgba(34,197,94,.55);
+border-color:#22c55e;
+}
+
+@media (hover:none) and (pointer:coarse){
+
+.controls{
+display:none;
+}
+
+}
+
+body.show-touch .touch-controls{
+display:flex;
+}
+
+body.show-touch .controls{
+display:none;
+}
+
+body.show-touch #gameScreen .wrap{
+padding-bottom:135px;
+}
+
 .coin{
 position:absolute;
 right:15px;
@@ -405,6 +501,15 @@ grid-template-columns:repeat(2,1fr);
 LOCAL 2 PLAYER · BEST OF 3
 </div>
 
+<div class="mode-toggle">
+<button id="mode1v1" class="mode-btn active" onclick="setMode(false)">⚔️ 1 vs 1</button>
+<button id="modeAI" class="mode-btn" onclick="setMode(true)">🤖 1 vs AI</button>
+</div>
+
+<div class="mode-toggle">
+<button id="forceTouchBtn" class="mode-btn" onclick="toggleForceTouch()">📱 모바일 모드</button>
+</div>
+
 <div class="players">
 
 <!-- P1 -->
@@ -448,7 +553,7 @@ class="weapon-popup hidden">
 
 <div class="panel p2">
 
-<h2>🔴 PLAYER 2</h2>
+<h2><span id="p2Label">🔴 PLAYER 2</span></h2>
 
 <h3>👤 캐릭터 색상</h3>
 
@@ -509,9 +614,9 @@ class="weapon-popup hidden">
 
 <div class="controls">
 
-P1 : WASD 이동 / W 점프 / F 공격
+<span id="p1ControlsText">P1 : WASD 이동 / W 점프 / F 공격</span>
 &nbsp; | &nbsp;
-P2 : 방향키 이동 / ↑ 점프 / SPACE 공격
+<span id="p2ControlsText">P2 : 방향키 이동 / ↑ 점프 / SPACE 공격</span>
 
 <br><br>
 
@@ -550,6 +655,24 @@ P1 0 : 0 P2 · ROUND 1
 <canvas id="game" width="1152" height="648"></canvas>
 
 <div id="message"></div>
+
+</div>
+
+<div id="touchControls" class="touch-controls">
+
+<div class="tc-side">
+<button class="tc-btn tc-jump" id="tcP1Jump">⤒</button>
+<button class="tc-btn tc-attack" id="tcP1Attack">🔫</button>
+<button class="tc-btn tc-move" id="tcP1Left">◀</button>
+<button class="tc-btn tc-move" id="tcP1Right">▶</button>
+</div>
+
+<div class="tc-side" id="tcP2Side">
+<button class="tc-btn tc-jump" id="tcP2Jump">⤒</button>
+<button class="tc-btn tc-attack" id="tcP2Attack">🔫</button>
+<button class="tc-btn tc-move" id="tcP2Left">◀</button>
+<button class="tc-btn tc-move" id="tcP2Right">▶</button>
+</div>
 
 </div>
 
@@ -1144,6 +1267,39 @@ p2:characters.indexOf("red")
 };
 
 let mapIndex=0;
+
+let vsAI=false;
+
+function setMode(ai){
+
+vsAI=ai;
+
+document.getElementById("mode1v1")
+.classList.toggle("active",!ai);
+
+document.getElementById("modeAI")
+.classList.toggle("active",ai);
+
+document.getElementById("p2Label")
+.textContent=
+ai?"🤖 PLAYER 2 (AI)":"🔴 PLAYER 2";
+
+document.getElementById("p2ControlsText")
+.textContent=
+ai
+?
+"P2 : 🤖 AI가 자동으로 플레이합니다"
+:
+"P2 : 방향키 이동 / ↑ 점프 / SPACE 공격";
+
+const tcP2=
+document.getElementById("tcP2Side");
+
+if(tcP2)
+tcP2.style.display=
+ai?"none":"grid";
+
+}
 
 
 /* =====================================================
@@ -1888,7 +2044,9 @@ ground:false,
 
 lastShot:0,
 
-attackFlash:0
+attackFlash:0,
+
+aiJumpTimer:0
 
 };
 
@@ -2160,14 +2318,109 @@ document.getElementById("score")
 이동
 ===================================================== */
 
+function computeAIDecision(ai){
+
+const target=
+ai===p2?p1:p2;
+
+const dx=target.x-ai.x;
+const dist=Math.abs(dx);
+
+const face=
+dx>=0?1:-1;
+
+let left=false;
+let right=false;
+
+const preferred=300;
+
+if(dist>preferred+60){
+
+if(dx>0)
+right=true;
+else
+left=true;
+
+}else if(dist<preferred-100){
+
+if(dx>0)
+left=true;
+else
+right=true;
+
+}
+
+
+ai.aiJumpTimer=
+(ai.aiJumpTimer||0)-16;
+
+let jump=false;
+
+if(ai.aiJumpTimer<=0){
+
+if(
+ai.ground&&
+(
+target.y<ai.y-30||
+Math.random()<0.02
+)
+){
+
+jump=true;
+
+ai.aiJumpTimer=
+550+Math.random()*750;
+
+}
+
+}
+
+
+const attack=
+dist<650;
+
+
+return{
+left:left,
+right:right,
+jump:jump,
+attack:attack,
+face:face
+};
+
+}
+
+
 function updatePlayer(p){
 
 const c=p.controls;
 
+let left,right,jumpPressed,attackPressed;
+let faceOverride=null;
+
+if(p===p2&&vsAI){
+
+const d=computeAIDecision(p);
+
+left=d.left;
+right=d.right;
+jumpPressed=d.jump;
+attackPressed=d.attack;
+faceOverride=d.face;
+
+}else{
+
+left=!!keys[c.left];
+right=!!keys[c.right];
+jumpPressed=!!keys[c.jump];
+attackPressed=!!keys[c.attack];
+
+}
+
 p.vx=0;
 
 
-if(keys[c.left]){
+if(left){
 
 p.vx=-4.7;
 p.face=-1;
@@ -2175,7 +2428,7 @@ p.face=-1;
 }
 
 
-if(keys[c.right]){
+if(right){
 
 p.vx=4.7;
 p.face=1;
@@ -2183,8 +2436,12 @@ p.face=1;
 }
 
 
+if(faceOverride!==null)
+p.face=faceOverride;
+
+
 if(
-keys[c.jump] &&
+jumpPressed&&
 p.ground
 ){
 
@@ -2231,7 +2488,7 @@ p.x
 );
 
 
-if(keys[c.attack])
+if(attackPressed)
 shoot(p);
 
 }
@@ -3023,6 +3280,104 @@ draw();
 requestAnimationFrame(loop);
 
 }
+
+
+/* =====================================================
+모바일 터치 컨트롤
+===================================================== */
+
+function bindHold(id,key){
+
+const el=
+document.getElementById(id);
+
+if(!el)
+return;
+
+const press=e=>{
+
+e.preventDefault();
+
+keys[key]=true;
+
+el.classList.add("active-touch");
+
+};
+
+const release=e=>{
+
+e.preventDefault();
+
+keys[key]=false;
+
+el.classList.remove("active-touch");
+
+};
+
+el.addEventListener(
+"touchstart",press,{passive:false}
+);
+
+el.addEventListener(
+"touchend",release,{passive:false}
+);
+
+el.addEventListener(
+"touchcancel",release,{passive:false}
+);
+
+el.addEventListener("mousedown",press);
+el.addEventListener("mouseup",release);
+el.addEventListener("mouseleave",release);
+
+}
+
+bindHold("tcP1Left","a");
+bindHold("tcP1Right","d");
+bindHold("tcP1Jump","w");
+bindHold("tcP1Attack","f");
+
+bindHold("tcP2Left","arrowleft");
+bindHold("tcP2Right","arrowright");
+bindHold("tcP2Jump","arrowup");
+bindHold("tcP2Attack"," ");
+
+
+let forceTouch=false;
+
+function updateTouchVisibility(){
+
+const isTouch=
+("ontouchstart" in window)||
+navigator.maxTouchPoints>0||
+window.matchMedia(
+"(hover:none) and (pointer:coarse)"
+).matches;
+
+document.body.classList.toggle(
+"show-touch",
+isTouch||forceTouch
+);
+
+}
+
+function toggleForceTouch(){
+
+forceTouch=!forceTouch;
+
+document.getElementById("forceTouchBtn")
+.classList.toggle("active",forceTouch);
+
+updateTouchVisibility();
+
+}
+
+updateTouchVisibility();
+
+window.addEventListener(
+"resize",
+updateTouchVisibility
+);
 
 
 /* =====================================================
